@@ -1,0 +1,18 @@
+{
+  "lock": false,
+  "tasks": {
+    "check": "deno fmt --check && deno lint && deno check **/*.ts",
+    "start": "deno run --allow-read --allow-net main.ts",
+    "build": "wasm-pack build --target web"
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"]
+    }
+  },
+  "exclude": ["pkg", "public"],
+  "imports": {
+    "@/": "./",
+    "$std/": "https://deno.land/std@0.218.2/"
+  }
+}
