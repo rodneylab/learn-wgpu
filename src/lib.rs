@@ -1,12 +1,128 @@
+use wgpu::util::DeviceExt;
 use winit::{
     dpi::PhysicalPosition,
     event::*,
-    event_loop::{ControlFlow, EventLoop},
+    event_loop::EventLoop,
+    keyboard::{KeyCode, PhysicalKey},
     window::{Window, WindowBuilder},
 };
 
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+struct Vertex {
+    position: [f32; 3],
+    color: [f32; 3],
+}
+
+impl Vertex {
+    fn desc() -> wgpu::VertexBufferLayout<'static> {
+        wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
+            step_mode: wgpu::VertexStepMode::Vertex,
+            attributes: &[
+                wgpu::VertexAttribute {
+                    offset: 0,
+                    shader_location: 0,
+                    format: wgpu::VertexFormat::Float32x3,
+                },
+                wgpu::VertexAttribute {
+                    offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
+                    shader_location: 1,
+                    format: wgpu::VertexFormat::Float32x3,
+                },
+            ],
+        }
+    }
+}
+
+const VERTICES: &[Vertex] = &[
+    Vertex {
+        position: [0.0, 0.5, 0.0],
+        color: [1.0, 0.0, 0.0],
+    },
+    Vertex {
+        position: [-0.5, -0.5, 0.0],
+        color: [0.0, 1.0, 0.0],
+    },
+    Vertex {
+        position: [0.5, -0.5, 0.0],
+        color: [0.0, 0.0, 1.0],
+    },
+];
+
+const VERTICES_PENTAGON: &[Vertex] = &[
+    Vertex {
+        position: [-0.0868241, 0.49240386, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        position: [-0.49513406, 0.06958647, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        position: [-0.21918549, -0.44939706, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        position: [0.35966998, -0.3473291, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        position: [0.44147372, 0.2347359, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
+];
+
+const VERTICES_STAR: &[Vertex] = &[
+    Vertex {
+        position: [-0.00444444, 0.3, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        position: [-0.08, 0.13777778, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        position: [-0.25555556, 0.11111111, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        position: [-0.12666667, -0.01333333, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        position: [-0.15333333, -0.18666667, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        position: [0.00222222, -0.10444444, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        position: [0.11777778, -0.18222222, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        position: [0.12888889, -0.00888889, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        position: [0.25333333, 0.11777778, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        position: [0.07777778, 0.14, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
+];
+
+const INDICES_PENTAGON: &[u16] = &[0, 1, 4, 1, 2, 4, 2, 3, 4];
+const INDICES_STAR: &[u16] = &[
+    0, 1, 9, 1, 2, 3, 3, 4, 5, 5, 6, 7, 7, 8, 9, 1, 7, 9, 1, 5, 7, 1, 3, 5,
+];
 
 struct State {
     surface: wgpu::Surface,
@@ -17,11 +133,17 @@ struct State {
     // render_pipeline: &'a wgpu::RenderPipeline,
     render_pipeline_0: wgpu::RenderPipeline,
     render_pipeline_1: wgpu::RenderPipeline,
+    vertex_buffer_0: wgpu::Buffer,
+    vertex_buffer_1: wgpu::Buffer,
+    index_buffer_0: wgpu::Buffer,
+    index_buffer_1: wgpu::Buffer,
     use_initial_render_pipeline: bool,
     clear_colour: wgpu::Color,
     // The window must be declared after the surface so it gets dropped after the surface, as it
     // contains unsafe references to the window's resources.
     window: Window,
+    num_indices_0: u32,
+    num_indices_1: u32,
 }
 
 impl State {
@@ -101,7 +223,7 @@ impl State {
             vertex: wgpu::VertexState {
                 module: &shader_0,
                 entry_point: "vs_main",
-                buffers: &[],
+                buffers: &[Vertex::desc()],
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader_0,
@@ -138,7 +260,7 @@ impl State {
             vertex: wgpu::VertexState {
                 module: &shader_1,
                 entry_point: "vs_main",
-                buffers: &[],
+                buffers: &[Vertex::desc()],
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader_1,
@@ -170,15 +292,38 @@ impl State {
             multiview: None,
         });
 
+        let vertex_buffer_0 = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Vertex Buffer Pentagon"),
+            contents: bytemuck::cast_slice(VERTICES_PENTAGON),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+        let vertex_buffer_1 = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Vertex Buffer Star"),
+            contents: bytemuck::cast_slice(VERTICES_STAR),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+
+        let index_buffer_0 = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Index Buffer Pentagon"),
+            contents: bytemuck::cast_slice(INDICES_PENTAGON),
+            usage: wgpu::BufferUsages::INDEX,
+        });
+        let index_buffer_1 = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Index Buffer Star"),
+            contents: bytemuck::cast_slice(INDICES_STAR),
+            usage: wgpu::BufferUsages::INDEX,
+        });
         surface.configure(&device, &config);
 
-        //let clear_colour = wgpu::Color::BLACK;
         let clear_colour = wgpu::Color {
             r: 0.1,
             g: 0.2,
             b: 0.3,
             a: 1.0,
         };
+
+        let num_indices_0 = INDICES_PENTAGON.len() as u32;
+        let num_indices_1 = INDICES_STAR.len() as u32;
 
         Self {
             window,
@@ -192,6 +337,12 @@ impl State {
             use_initial_render_pipeline: true,
             render_pipeline_0,
             render_pipeline_1,
+            vertex_buffer_0,
+            vertex_buffer_1,
+            index_buffer_0,
+            index_buffer_1,
+            num_indices_0,
+            num_indices_1,
         }
     }
 
@@ -224,10 +375,10 @@ impl State {
                 true
             }
             WindowEvent::KeyboardInput {
-                input:
-                    KeyboardInput {
+                event:
+                    KeyEvent {
                         state: ElementState::Pressed,
-                        virtual_keycode: Some(VirtualKeyCode::Space),
+                        physical_key: PhysicalKey::Code(KeyCode::Space),
                         ..
                     },
                 ..
@@ -270,11 +421,17 @@ impl State {
 
             if self.use_initial_render_pipeline {
                 render_pass.set_pipeline(&self.render_pipeline_0);
+                render_pass.set_vertex_buffer(0, self.vertex_buffer_0.slice(..));
+                render_pass
+                    .set_index_buffer(self.index_buffer_0.slice(..), wgpu::IndexFormat::Uint16);
+                render_pass.draw_indexed(0..self.num_indices_0, 0, 0..1);
             } else {
                 render_pass.set_pipeline(&self.render_pipeline_1);
+                render_pass.set_vertex_buffer(0, self.vertex_buffer_1.slice(..));
+                render_pass
+                    .set_index_buffer(self.index_buffer_1.slice(..), wgpu::IndexFormat::Uint16);
+                render_pass.draw_indexed(0..self.num_indices_1, 0, 0..1);
             }
-
-            render_pass.draw(0..3, 0..1);
         }
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();
@@ -294,11 +451,11 @@ pub async fn run() {
         }
     }
 
-    let event_loop = EventLoop::new();
+    let event_loop = EventLoop::new().expect("Unexpected issue creating event loop");
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
     use winit::dpi::PhysicalSize;
-    window.set_inner_size(PhysicalSize::new(450, 400));
+    let _ = window.request_inner_size(PhysicalSize::new(450, 400));
 
     #[cfg(target_arch = "wasm32")]
     {
@@ -316,7 +473,7 @@ pub async fn run() {
 
     let mut state = State::new(window).await;
 
-    event_loop.run(move |event, _, control_flow| match event {
+    let _=event_loop.run(move |event,  elwt| match event {
         Event::WindowEvent {
             ref event,
             window_id,
@@ -325,36 +482,38 @@ pub async fn run() {
                 match event {
                     WindowEvent::CloseRequested
                     | WindowEvent::KeyboardInput {
-                        input:
-                            KeyboardInput {
+                        event:
+                            KeyEvent {
                                 state: ElementState::Pressed,
-                                virtual_keycode: Some(VirtualKeyCode::Escape),
+                        physical_key: PhysicalKey::Code(KeyCode::Escape),
                                 ..
                             },
                         ..
-                    } => *control_flow = ControlFlow::Exit,
+                    } => (*elwt).exit(),
                     WindowEvent::Resized(physical_size) => {
                         state.resize(*physical_size);
                     }
-                    WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                        state.resize(**new_inner_size);
+                    WindowEvent::ScaleFactorChanged {
+                         ..
+                    } => { /* should now receive a Resized event after scale factor change */
                     }
-                    _ => {}
-                }
-            }
-        }
-        Event::RedrawRequested(window_id) if window_id == state.window().id() => {
+        //WindowEvent::RedrawRequested(window_id) if window_id == state.window().id() => {
+        WindowEvent::RedrawRequested=>{
             state.update();
             match state.render() {
                 Ok(_) => {}
                 Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
-                Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
+                Err(wgpu::SurfaceError::OutOfMemory) => (*elwt).exit(),
                 // All other errors (Outdated, Timeout) should be resolved by the next
                 // frame
                 Err(e) => eprintln!("{:?}", e),
             }
         }
-        Event::MainEventsCleared => {
+                    _ => {}
+                }
+            }
+        }
+        Event::AboutToWait => {
             // RedrawRequested will only trigger once, unless we manually request it
             state.window().request_redraw();
         }
