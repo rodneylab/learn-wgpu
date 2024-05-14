@@ -5,8 +5,8 @@ authors = ["Rodney Johnson <ask@rodneylab.com>"]
 edition = "2021"
 license = "BSD-3-Clause"
 repository = "https://github.com/rodneylab/learn-wgpu"
-# intrument-coverage used in code coverage tests requires 1.60
-rust-version = "1.60"
+# rustix v0.38.32 requires Rust 1.63
+rust-version = "1.63"
 description = "Rust wgpu"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
