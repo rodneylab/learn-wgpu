@@ -1,7 +1,7 @@
 use image::GenericImageView;
 
 pub struct Texture {
-    #[allow(clippy::struct_field_names)]
+    #[allow(clippy::struct_field_names, dead_code)]
     pub texture: wgpu::Texture,
     pub view: wgpu::TextureView,
     pub sampler: wgpu::Sampler,
