@@ -113,6 +113,7 @@ exceptions = [
   # list
   # { allow = ["Zlib"], crate = "adler32" },
   { allow = ["Zlib"], crate = "nanorand" },
+  { allow = ["Zlib"], crate = "slotmap" },
 ]
 
 # Some crates don't have (easily) machine readable licensing information,
