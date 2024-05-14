@@ -1,7 +1,11 @@
+#![warn(clippy::all, clippy::pedantic)]
+
+mod texture;
+
 use wgpu::util::DeviceExt;
 use winit::{
     dpi::PhysicalPosition,
-    event::*,
+    event::{ElementState, Event, KeyEvent, WindowEvent},
     event_loop::EventLoop,
     keyboard::{KeyCode, PhysicalKey},
     window::{Window, WindowBuilder},
@@ -14,7 +18,7 @@ use wasm_bindgen::prelude::*;
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 struct Vertex {
     position: [f32; 3],
-    color: [f32; 3],
+    tex_coords: [f32; 2],
 }
 
 impl Vertex {
@@ -31,91 +35,77 @@ impl Vertex {
                 wgpu::VertexAttribute {
                     offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
                     shader_location: 1,
-                    format: wgpu::VertexFormat::Float32x3,
+                    format: wgpu::VertexFormat::Float32x2,
                 },
             ],
         }
     }
 }
 
-const VERTICES: &[Vertex] = &[
-    Vertex {
-        position: [0.0, 0.5, 0.0],
-        color: [1.0, 0.0, 0.0],
-    },
-    Vertex {
-        position: [-0.5, -0.5, 0.0],
-        color: [0.0, 1.0, 0.0],
-    },
-    Vertex {
-        position: [0.5, -0.5, 0.0],
-        color: [0.0, 0.0, 1.0],
-    },
-];
-
 const VERTICES_PENTAGON: &[Vertex] = &[
+    // Changed
     Vertex {
-        position: [-0.0868241, 0.49240386, 0.0],
-        color: [0.5, 0.0, 0.5],
-    },
+        position: [-0.086_824_1, 0.492_403_86, 0.0],
+        tex_coords: [0.413_175_9, 0.007_596_14],
+    }, // A
     Vertex {
-        position: [-0.49513406, 0.06958647, 0.0],
-        color: [0.5, 0.0, 0.5],
-    },
+        position: [-0.495_134_06, 0.069_586_47, 0.0],
+        tex_coords: [0.004_865_944_4, 0.430_413_54],
+    }, // B
     Vertex {
-        position: [-0.21918549, -0.44939706, 0.0],
-        color: [0.5, 0.0, 0.5],
-    },
+        position: [-0.219_185_49, -0.449_397_06, 0.0],
+        tex_coords: [0.280_814_53, 0.949_397],
+    }, // C
     Vertex {
-        position: [0.35966998, -0.3473291, 0.0],
-        color: [0.5, 0.0, 0.5],
-    },
+        position: [0.359_669_98, -0.347_329_1, 0.0],
+        tex_coords: [0.85967, 0.847_329_14],
+    }, // D
     Vertex {
-        position: [0.44147372, 0.2347359, 0.0],
-        color: [0.5, 0.0, 0.5],
-    },
+        position: [0.441_473_72, 0.234_735_9, 0.0],
+        tex_coords: [0.941_473_7, 0.265_264_1],
+    }, // E
 ];
 
 const VERTICES_STAR: &[Vertex] = &[
     Vertex {
-        position: [-0.00444444, 0.3, 0.0],
-        color: [0.5, 0.0, 0.5],
+        position: [-0.004_444_44, 0.3, 0.0],
+        tex_coords: [0.5, 0.225],
     },
     Vertex {
-        position: [-0.08, 0.13777778, 0.0],
-        color: [0.5, 0.0, 0.5],
+        position: [-0.08, 0.137_777_78, 0.0],
+        tex_coords: [0.42, 0.4075],
     },
     Vertex {
-        position: [-0.25555556, 0.11111111, 0.0],
-        color: [0.5, 0.0, 0.5],
+        position: [-0.255_555_56, 0.111_111_11, 0.0],
+        tex_coords: [0.244_444_44, 0.4375],
     },
     Vertex {
-        position: [-0.12666667, -0.01333333, 0.0],
-        color: [0.5, 0.0, 0.5],
+        position: [-0.126_666_67, -0.013_333_33, 0.0],
+        tex_coords: [0.373_333_33, 0.5775],
     },
     Vertex {
-        position: [-0.15333333, -0.18666667, 0.0],
-        color: [0.5, 0.0, 0.5],
+        position: [-0.153_333_33, -0.186_666_68, 0.0],
+        tex_coords: [0.346_666_67, 0.7725],
     },
     Vertex {
-        position: [0.00222222, -0.10444444, 0.0],
-        color: [0.5, 0.0, 0.5],
+        position: [0.002_222_22, -0.104_444_44, 0.0],
+        tex_coords: [0.502_222_22, 0.68],
     },
     Vertex {
-        position: [0.11777778, -0.18222222, 0.0],
-        color: [0.5, 0.0, 0.5],
+        position: [0.117_777_78, -0.182_222_22, 0.0],
+        tex_coords: [0.617_777_78, 0.7675],
     },
     Vertex {
-        position: [0.12888889, -0.00888889, 0.0],
-        color: [0.5, 0.0, 0.5],
+        position: [0.128_888_89, -0.008_888_89, 0.0],
+        tex_coords: [0.628_888_9, 0.5725],
     },
     Vertex {
-        position: [0.25333333, 0.11777778, 0.0],
-        color: [0.5, 0.0, 0.5],
+        position: [0.253_333_33, 0.117_777_79, 0.0],
+        tex_coords: [0.753_333_33, 0.43],
     },
     Vertex {
-        position: [0.07777778, 0.14, 0.0],
-        color: [0.5, 0.0, 0.5],
+        position: [0.077_777_78, 0.14, 0.0],
+        tex_coords: [0.577_777_8, 0.405],
     },
 ];
 
@@ -144,9 +134,13 @@ struct State {
     window: Window,
     num_indices_0: u32,
     num_indices_1: u32,
+    diffuse_bind_group_0: wgpu::BindGroup,
+    diffuse_bind_group_1: wgpu::BindGroup,
+    // diffuse_texture: texture::Texture,
 }
 
 impl State {
+    #[allow(clippy::too_many_lines)]
     async fn new(window: Window) -> Self {
         let size = window.inner_size();
 
@@ -192,7 +186,7 @@ impl State {
             .formats
             .iter()
             .copied()
-            .find(|f| f.is_srgb())
+            .find(wgpu::TextureFormat::is_srgb)
             .unwrap_or(surface_caps.formats[0]);
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
@@ -203,6 +197,94 @@ impl State {
             alpha_mode: surface_caps.alpha_modes[0],
             view_formats: vec![],
         };
+        surface.configure(&device, &config);
+
+        let diffuse_bytes_0 = include_bytes!("happy-tree.bdff8a19.png");
+        let diffuse_texture_0 = texture::Texture::from_bytes(
+            &device,
+            &queue,
+            diffuse_bytes_0,
+            "happy-tree.bdff8a19.png",
+        )
+        .unwrap();
+        let texture_bind_group_layout_0 =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            multisampled: false,
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        },
+                        count: None,
+                    },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
+                    },
+                ],
+                label: Some("texture_bind_group_layout"),
+            });
+
+        let diffuse_bind_group_0 = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &texture_bind_group_layout_0,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(&diffuse_texture_0.view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::Sampler(&diffuse_texture_0.sampler),
+                },
+            ],
+            label: Some("diffuse_bind_group"),
+        });
+        let diffuse_bytes_1 = include_bytes!("catfornarak.png");
+        let diffuse_texture_1 =
+            texture::Texture::from_bytes(&device, &queue, diffuse_bytes_1, "catfornarak.png")
+                .unwrap();
+        let texture_bind_group_layout_1 =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            multisampled: false,
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        },
+                        count: None,
+                    },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
+                    },
+                ],
+                label: Some("texture_bind_group_layout"),
+            });
+
+        let diffuse_bind_group_1 = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &texture_bind_group_layout_1,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(&diffuse_texture_1.view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::Sampler(&diffuse_texture_1.sampler),
+                },
+            ],
+            label: Some("diffuse_bind_group"),
+        });
         let shader_0 = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
@@ -214,7 +296,7 @@ impl State {
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout 0"),
-                bind_group_layouts: &[],
+                bind_group_layouts: &[&texture_bind_group_layout_0],
                 push_constant_ranges: &[],
             });
         let render_pipeline_0 = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -313,7 +395,6 @@ impl State {
             contents: bytemuck::cast_slice(INDICES_STAR),
             usage: wgpu::BufferUsages::INDEX,
         });
-        surface.configure(&device, &config);
 
         let clear_colour = wgpu::Color {
             r: 0.1,
@@ -322,8 +403,9 @@ impl State {
             a: 1.0,
         };
 
-        let num_indices_0 = INDICES_PENTAGON.len() as u32;
-        let num_indices_1 = INDICES_STAR.len() as u32;
+        let num_indices_0 =
+            u32::try_from(INDICES_PENTAGON.len()).expect("Expected smaller pentagon index");
+        let num_indices_1 = u32::try_from(INDICES_STAR.len()).expect("Expected smaller star index");
 
         Self {
             window,
@@ -343,6 +425,9 @@ impl State {
             index_buffer_1,
             num_indices_0,
             num_indices_1,
+            diffuse_bind_group_0,
+            diffuse_bind_group_1,
+            // diffuse_texture: diffuse_texture_0,
         }
     }
 
@@ -366,8 +451,8 @@ impl State {
                 ..
             } => {
                 self.clear_colour = wgpu::Color {
-                    r: x / self.size.width as f64,
-                    g: y / self.size.width as f64,
+                    r: x / f64::from(self.size.width),
+                    g: y / f64::from(self.size.height),
                     b: 1.0,
                     a: 1.0,
                 };
@@ -391,6 +476,7 @@ impl State {
         }
     }
 
+    #[allow(clippy::unused_self)]
     fn update(&mut self) {}
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -421,12 +507,14 @@ impl State {
 
             if self.use_initial_render_pipeline {
                 render_pass.set_pipeline(&self.render_pipeline_0);
+                render_pass.set_bind_group(0, &self.diffuse_bind_group_0, &[]);
                 render_pass.set_vertex_buffer(0, self.vertex_buffer_0.slice(..));
                 render_pass
                     .set_index_buffer(self.index_buffer_0.slice(..), wgpu::IndexFormat::Uint16);
                 render_pass.draw_indexed(0..self.num_indices_0, 0, 0..1);
             } else {
                 render_pass.set_pipeline(&self.render_pipeline_1);
+                render_pass.set_bind_group(0, &self.diffuse_bind_group_1, &[]);
                 render_pass.set_vertex_buffer(0, self.vertex_buffer_1.slice(..));
                 render_pass
                     .set_index_buffer(self.index_buffer_1.slice(..), wgpu::IndexFormat::Uint16);
@@ -440,8 +528,13 @@ impl State {
     }
 }
 
+///
+/// # Panics
+/// Panics if unable to log to the console
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 pub async fn run() {
+    use winit::dpi::PhysicalSize;
+
     cfg_if::cfg_if! {
         if #[cfg(target_arch="wasm32")] {
             std::panic::set_hook(Box::new(console_error_panic_hook::hook));
@@ -454,7 +547,6 @@ pub async fn run() {
     let event_loop = EventLoop::new().expect("Unexpected issue creating event loop");
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
-    use winit::dpi::PhysicalSize;
     let _ = window.request_inner_size(PhysicalSize::new(450, 400));
 
     #[cfg(target_arch = "wasm32")]
@@ -473,7 +565,7 @@ pub async fn run() {
 
     let mut state = State::new(window).await;
 
-    let _=event_loop.run(move |event,  elwt| match event {
+    let _ = event_loop.run(move |event, elwt| match event {
         Event::WindowEvent {
             ref event,
             window_id,
@@ -485,7 +577,7 @@ pub async fn run() {
                         event:
                             KeyEvent {
                                 state: ElementState::Pressed,
-                        physical_key: PhysicalKey::Code(KeyCode::Escape),
+                                physical_key: PhysicalKey::Code(KeyCode::Escape),
                                 ..
                             },
                         ..
@@ -493,22 +585,22 @@ pub async fn run() {
                     WindowEvent::Resized(physical_size) => {
                         state.resize(*physical_size);
                     }
-                    WindowEvent::ScaleFactorChanged {
-                         ..
-                    } => { /* should now receive a Resized event after scale factor change */
+                    //    WindowEvent::ScaleFactorChanged {
+                    //       ..
+                    //  } => { /* should now receive a Resized event after scale factor change */
+                    // }
+                    //WindowEvent::RedrawRequested(window_id) if window_id == state.window().id() => {
+                    WindowEvent::RedrawRequested => {
+                        state.update();
+                        match state.render() {
+                            Ok(()) => {}
+                            Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
+                            Err(wgpu::SurfaceError::OutOfMemory) => (*elwt).exit(),
+                            // All other errors (Outdated, Timeout) should be resolved by the next
+                            // frame
+                            Err(e) => eprintln!("{e:?}"),
+                        }
                     }
-        //WindowEvent::RedrawRequested(window_id) if window_id == state.window().id() => {
-        WindowEvent::RedrawRequested=>{
-            state.update();
-            match state.render() {
-                Ok(_) => {}
-                Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
-                Err(wgpu::SurfaceError::OutOfMemory) => (*elwt).exit(),
-                // All other errors (Outdated, Timeout) should be resolved by the next
-                // frame
-                Err(e) => eprintln!("{:?}", e),
-            }
-        }
                     _ => {}
                 }
             }
