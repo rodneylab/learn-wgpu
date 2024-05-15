@@ -1,2 +1,4 @@
 /target
 .DS_Store
+public/learn_wgpu_bg.wasm
+public/learn_wgpu_bg.wasm.ts
