@@ -1,0 +1,5 @@
+[files]
+extend-exclude = [
+  "public/learn_wgpu.js",
+  "public/learn_wgpu_bg.js",
+]
