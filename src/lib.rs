@@ -167,7 +167,7 @@ impl CameraUniform {
     }
 }
 
-#[expect(clippy::struct_excessive_bools)]
+#[allow(clippy::struct_excessive_bools)]
 struct CameraController {
     speed: f32,
     is_forward_pressed: bool,
