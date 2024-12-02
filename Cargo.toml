@@ -5,8 +5,8 @@ authors = ["Rodney Johnson <ask@rodneylab.com>"]
 edition = "2021"
 license = "BSD-3-Clause"
 repository = "https://github.com/rodneylab/learn-wgpu"
-# env_logger v1.11.3 requires Rust 1.71
-rust-version = "1.71"
+# wgpu v23.0.1 requires Rust 1.76
+rust-version = "1.76"
 description = "Rust wgpu"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
