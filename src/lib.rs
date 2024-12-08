@@ -145,26 +145,47 @@ impl Camera {
     }
 }
 
+struct CameraStaging {
+    camera: Camera,
+    model_rotation: cgmath::Deg<f32>,
+}
+
+impl CameraStaging {
+    fn new(camera: Camera) -> Self {
+        Self {
+            camera,
+            model_rotation: cgmath::Deg(0.0),
+        }
+    }
+
+    fn update_camera(&self, camera_uniform: &mut CameraUniform) {
+        camera_uniform.model_view_proj = (OPENGL_TO_WGPU_MATRIX
+            * self.camera.build_view_projection_matrix()
+            * cgmath::Matrix4::from_angle_z(self.model_rotation))
+        .into();
+    }
+}
+
 // Needed for Rust to store our data as expected by the shaders
 #[repr(C)]
 // Needed so we can store this in a buffer
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 struct CameraUniform {
     // We cannot use cgmath with bytemuch directly, so con the Matrix4 to a 4x4 f32 array
-    view_proj: [[f32; 4]; 4],
+    model_view_proj: [[f32; 4]; 4],
 }
 
 impl CameraUniform {
     fn new() -> Self {
         use cgmath::SquareMatrix;
         Self {
-            view_proj: cgmath::Matrix4::identity().into(),
+            model_view_proj: cgmath::Matrix4::identity().into(),
         }
     }
 
-    fn update_view_proj(&mut self, camera: &Camera) {
-        self.view_proj = camera.build_view_projection_matrix().into();
-    }
+    // fn update_view_proj(&mut self, camera: &Camera) {
+    //     self.view_proj = camera.build_view_projection_matrix().into();
+    // }
 }
 
 #[allow(clippy::struct_excessive_bools)]
@@ -260,7 +281,8 @@ struct State<'a> {
     surface: wgpu::Surface<'a>,
     surface_configured: bool,
     device: wgpu::Device,
-    camera: Camera,
+    //camera: Camera,
+    camera_staging: CameraStaging,
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
     camera_controller: CameraController,
@@ -412,7 +434,8 @@ impl State<'_> {
         let camera_controller = CameraController::new(0.2);
 
         let mut camera_uniform = CameraUniform::new();
-        camera_uniform.update_view_proj(&camera);
+        let camera_staging = CameraStaging::new(camera);
+        camera_staging.update_camera(&mut camera_uniform);
 
         let camera_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Camera Buffer"),
@@ -577,7 +600,7 @@ impl State<'_> {
             surface,
             surface_configured: false,
             device,
-            camera,
+            camera_staging,
             camera_uniform,
             camera_buffer,
             camera_bind_group,
@@ -690,8 +713,10 @@ impl State<'_> {
 
     #[allow(clippy::unused_self)]
     fn update(&mut self) {
-        self.camera_controller.update_camera(&mut self.camera);
-        self.camera_uniform.update_view_proj(&self.camera);
+        self.camera_controller
+            .update_camera(&mut self.camera_staging.camera);
+        self.camera_staging.model_rotation += cgmath::Deg(2.0);
+        self.camera_staging.update_camera(&mut self.camera_uniform);
         self.queue.write_buffer(
             &self.camera_buffer,
             0,

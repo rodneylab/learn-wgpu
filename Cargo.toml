@@ -14,7 +14,7 @@ description = "Rust wgpu"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-anyhow = "1.0.93"
+anyhow = "1.0.94"
 bytemuck = { version = "1.20.0", features = ["derive"] }
 cfg-if = "1.0.0"
 cgmath = "0.18.0"
@@ -29,6 +29,6 @@ winit = { version = "0.30.5", features = ["rwh_05"] }
 console_error_panic_hook = "0.1.7"
 console_log = "1.0.0"
 wgpu = { version = "23.0.1", features = ["webgl"] }
-wasm-bindgen = "0.2.97"
-wasm-bindgen-futures = "0.4.47"
+wasm-bindgen = "0.2.99"
+wasm-bindgen-futures = "0.4.49"
 web-sys = { version = "^0.3.74", features = ["Document", "Window", "Element"] }

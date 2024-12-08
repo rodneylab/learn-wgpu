@@ -33,6 +33,5 @@ var s_diffuse: sampler;
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    //return vec4<f32>(in.clip_position[0] / 400.0, in.clip_position[1] / 450.0, 0.0, 1.0);
     return textureSample(t_diffuse, s_diffuse, in.tex_coords);
 }
