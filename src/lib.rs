@@ -4,8 +4,11 @@ mod texture;
 
 use std::sync::Arc;
 
+use cgmath::{InnerSpace, Rotation3, Zero};
 use pollster::FutureExt;
-use wgpu::{util::DeviceExt, Adapter, Device, Instance, Queue, Surface, SurfaceCapabilities};
+use wgpu::{
+    util::DeviceExt, Adapter, Device, Instance as WGPUInstance, Queue, Surface, SurfaceCapabilities,
+};
 use winit::{
     application::ApplicationHandler,
     dpi::PhysicalSize,
@@ -17,6 +20,16 @@ use winit::{
 
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
+
+const NUM_INSTANCES_PER_ROW: u32 = 10;
+#[allow(clippy::cast_precision_loss)]
+const INSTANCE_DISPLACEMENT: cgmath::Vector3<f32> = cgmath::Vector3::new(
+    NUM_INSTANCES_PER_ROW as f32 * 0.5,
+    0.0,
+    NUM_INSTANCES_PER_ROW as f32 * 0.5,
+);
+// const ROTATION_SPEED: f32 = 2.0 * std::f32::consts::PI / 60.0;
+const ROTATION_SPEED: f32 = 2.0 * std::f32::consts::PI / 90.0;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
@@ -277,6 +290,59 @@ impl CameraController {
     }
 }
 
+#[repr(C)]
+#[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
+struct InstanceRaw {
+    model: [[f32; 4]; 4],
+}
+
+impl InstanceRaw {
+    fn desc() -> wgpu::VertexBufferLayout<'static> {
+        use std::mem;
+        wgpu::VertexBufferLayout {
+            array_stride: mem::size_of::<InstanceRaw>() as wgpu::BufferAddress,
+            step_mode: wgpu::VertexStepMode::Instance,
+            attributes: &[
+                wgpu::VertexAttribute {
+                    format: wgpu::VertexFormat::Float32x4,
+                    offset: 0,
+                    shader_location: 5,
+                },
+                wgpu::VertexAttribute {
+                    format: wgpu::VertexFormat::Float32x4,
+                    offset: mem::size_of::<[f32; 4]>() as wgpu::BufferAddress,
+                    shader_location: 6,
+                },
+                wgpu::VertexAttribute {
+                    format: wgpu::VertexFormat::Float32x4,
+                    offset: mem::size_of::<[f32; 8]>() as wgpu::BufferAddress,
+                    shader_location: 7,
+                },
+                wgpu::VertexAttribute {
+                    format: wgpu::VertexFormat::Float32x4,
+                    offset: mem::size_of::<[f32; 12]>() as wgpu::BufferAddress,
+                    shader_location: 8,
+                },
+            ],
+        }
+    }
+}
+
+struct Instance {
+    position: cgmath::Vector3<f32>,
+    rotation: cgmath::Quaternion<f32>,
+}
+
+impl Instance {
+    fn to_raw(&self) -> InstanceRaw {
+        InstanceRaw {
+            model: (cgmath::Matrix4::from_translation(self.position)
+                * cgmath::Matrix4::from(self.rotation))
+            .into(),
+        }
+    }
+}
+
 struct State<'a> {
     surface: wgpu::Surface<'a>,
     surface_configured: bool,
@@ -298,6 +364,8 @@ struct State<'a> {
     index_buffer_1: wgpu::Buffer,
     use_initial_render_pipeline: bool,
     clear_colour: wgpu::Color,
+    instances: Vec<Instance>,
+    instance_buffer: wgpu::Buffer,
     // The window must be declared after the surface so it gets dropped after the surface, as it
     // contains unsafe references to the window's resources.
     window: Arc<Window>,
@@ -443,6 +511,43 @@ impl State<'_> {
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
+        let instances = (0..NUM_INSTANCES_PER_ROW)
+            .flat_map(|z| {
+                (0..NUM_INSTANCES_PER_ROW).map(move |x| {
+                    let x_f32: f32;
+                    let z_f32: f32;
+                    #[allow(clippy::cast_precision_loss)]
+                    {
+                        x_f32 = x as f32;
+                        z_f32 = z as f32;
+                    };
+                    let position = cgmath::Vector3 {
+                        x: x_f32,
+                        y: 0.0,
+                        z: z_f32,
+                    } - INSTANCE_DISPLACEMENT;
+
+                    let rotation = if position.is_zero() {
+                        cgmath::Quaternion::from_axis_angle(
+                            cgmath::Vector3::unit_z(),
+                            cgmath::Deg(0.0),
+                        )
+                    } else {
+                        cgmath::Quaternion::from_axis_angle(position.normalize(), cgmath::Deg(45.0))
+                    };
+
+                    Instance { position, rotation }
+                })
+            })
+            .collect::<Vec<_>>();
+        let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
+        let instance_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Instance Buffer"),
+            contents: bytemuck::cast_slice(&instance_data),
+            //usage: wgpu::BufferUsages::VERTEX,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+        });
+
         let camera_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 entries: &[wgpu::BindGroupLayoutEntry {
@@ -487,7 +592,7 @@ impl State<'_> {
                 module: &shader_0,
                 entry_point: Some("vs_main"),
                 compilation_options: wgpu::PipelineCompilationOptions::default(),
-                buffers: &[Vertex::desc()],
+                buffers: &[Vertex::desc(), InstanceRaw::desc()],
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader_0,
@@ -527,7 +632,7 @@ impl State<'_> {
                 module: &shader_1,
                 entry_point: Some("vs_main"),
                 compilation_options: wgpu::PipelineCompilationOptions::default(),
-                buffers: &[Vertex::desc()],
+                buffers: &[Vertex::desc(), InstanceRaw::desc()],
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader_1,
@@ -620,6 +725,8 @@ impl State<'_> {
             num_indices_1,
             diffuse_bind_group_0,
             diffuse_bind_group_1,
+            instances,
+            instance_buffer,
             modifiers: ModifiersState::empty(),
         }
     }
@@ -669,7 +776,7 @@ impl State<'_> {
             .unwrap()
     }
 
-    fn create_adapter(instance: &Instance, surface: &Surface) -> Adapter {
+    fn create_adapter(instance: &WGPUInstance, surface: &Surface) -> Adapter {
         instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::default(),
@@ -680,8 +787,8 @@ impl State<'_> {
             .unwrap()
     }
 
-    fn create_gpu_instance() -> Instance {
-        Instance::new(wgpu::InstanceDescriptor {
+    fn create_gpu_instance() -> WGPUInstance {
+        WGPUInstance::new(wgpu::InstanceDescriptor {
             #[cfg(not(target_arch = "wasm32"))]
             backends: wgpu::Backends::PRIMARY,
             #[cfg(target_arch = "wasm32")]
@@ -711,11 +818,40 @@ impl State<'_> {
         self.camera_controller.process_events(event)
     }
 
-    #[allow(clippy::unused_self)]
     fn update(&mut self) {
+        let instances = self
+            .instances
+            .iter()
+            .map(
+                |Instance {
+                     position,
+                     rotation: current_rotation,
+                 }| {
+                    let cgmath::Vector3 { x, y, z } = position;
+                    let amount = cgmath::Quaternion::from_angle_y(cgmath::Rad(ROTATION_SPEED));
+                    Instance {
+                        position: cgmath::Vector3 {
+                            x: *x - 0.01,
+                            y: *y,
+                            z: *z,
+                        },
+                        rotation: amount * current_rotation,
+                    }
+                },
+            )
+            .collect::<Vec<_>>();
+        let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
+        self.instances = instances;
+        self.queue.write_buffer(
+            &self.instance_buffer,
+            0,
+            bytemuck::cast_slice(&instance_data),
+        );
+
         self.camera_controller
             .update_camera(&mut self.camera_staging.camera);
-        self.camera_staging.model_rotation += cgmath::Deg(2.0);
+        //self.camera_staging.model_rotation += cgmath::Deg(2.0);
+        self.camera_staging.model_rotation += cgmath::Deg(0.2);
         self.camera_staging.update_camera(&mut self.camera_uniform);
         self.queue.write_buffer(
             &self.camera_buffer,
@@ -755,17 +891,35 @@ impl State<'_> {
                 render_pass.set_bind_group(0, &self.diffuse_bind_group_0, &[]);
                 render_pass.set_bind_group(1, &self.camera_bind_group, &[]);
                 render_pass.set_vertex_buffer(0, self.vertex_buffer_0.slice(..));
+                render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
                 render_pass
                     .set_index_buffer(self.index_buffer_0.slice(..), wgpu::IndexFormat::Uint16);
-                render_pass.draw_indexed(0..self.num_indices_0, 0, 0..1);
+                render_pass.draw_indexed(
+                    0..self.num_indices_0,
+                    0,
+                    0..self
+                        .instances
+                        .len()
+                        .try_into()
+                        .expect("These should be few enough instances to be represented as u32"),
+                );
             } else {
                 render_pass.set_pipeline(&self.render_pipeline_1);
                 render_pass.set_bind_group(0, &self.diffuse_bind_group_1, &[]);
                 render_pass.set_bind_group(1, &self.camera_bind_group, &[]);
                 render_pass.set_vertex_buffer(0, self.vertex_buffer_1.slice(..));
+                render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
                 render_pass
                     .set_index_buffer(self.index_buffer_1.slice(..), wgpu::IndexFormat::Uint16);
-                render_pass.draw_indexed(0..self.num_indices_1, 0, 0..1);
+                render_pass.draw_indexed(
+                    0..self.num_indices_1,
+                    0,
+                    0..self
+                        .instances
+                        .len()
+                        .try_into()
+                        .expect("These should be few enough instances to be represented as u32"),
+                );
             }
         }
         self.queue.submit(std::iter::once(encoder.finish()));
