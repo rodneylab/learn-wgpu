@@ -3,3 +3,5 @@ extend-exclude = [
   "public/learn_wgpu.js",
   "public/learn_wgpu_bg.js",
 ]
+[default.extend-words]
+lod = "lod"
