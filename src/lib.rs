@@ -432,7 +432,7 @@ impl DepthPass {
         });
 
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: Some("Depth Pass Pipleline Layout"),
+            label: Some("Depth Pass Pipeline Layout"),
             bind_group_layouts: &[&layout],
             push_constant_ranges: &[],
         });
