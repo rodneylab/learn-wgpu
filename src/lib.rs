@@ -7,7 +7,7 @@ mod texture;
 use std::sync::Arc;
 
 use cgmath::{InnerSpace, Rotation3, Zero};
-use model::{DrawModel, Vertex};
+use model::{Draw as DrawModel, Vertex};
 use pollster::FutureExt;
 use wgpu::{
     util::DeviceExt, Adapter, Device, Instance as WGPUInstance, Queue, Surface, SurfaceCapabilities,

@@ -8,6 +8,7 @@ pub trait Vertex {
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+#[allow(clippy::module_name_repetitions)]
 pub struct ModelVertex {
     pub position: [f32; 3],
     pub tex_coords: [f32; 2],
@@ -43,17 +44,17 @@ impl Vertex for ModelVertex {
 }
 
 pub struct Material {
-    #[expect(unused)]
+    #[allow(unused)]
     pub name: String,
 
-    #[expect(unused)]
+    #[allow(unused)]
     pub diffuse_texture: texture::Texture,
 
     pub bind_group: wgpu::BindGroup,
 }
 
 pub struct Mesh {
-    #[expect(unused)]
+    #[allow(unused)]
     pub name: String,
 
     pub vertex_buffer: wgpu::Buffer,
@@ -67,8 +68,8 @@ pub struct Model {
     pub materials: Vec<Material>,
 }
 
-pub trait DrawModel<'a> {
-    #[expect(dead_code)]
+pub trait Draw<'a> {
+    #[allow(dead_code)]
     fn draw_mesh(
         &mut self,
         mesh: &'a Mesh,
@@ -84,7 +85,7 @@ pub trait DrawModel<'a> {
         camera_bind_group: &'a wgpu::BindGroup,
     );
 
-    #[expect(dead_code)]
+    #[allow(dead_code)]
     fn draw_model(&mut self, model: &'a Model, camera_bind_group: &'a wgpu::BindGroup);
 
     fn draw_model_instanced(
@@ -95,7 +96,7 @@ pub trait DrawModel<'a> {
     );
 }
 
-impl<'a, 'b> DrawModel<'b> for wgpu::RenderPass<'a>
+impl<'a, 'b> Draw<'b> for wgpu::RenderPass<'a>
 where
     'b: 'a,
 {

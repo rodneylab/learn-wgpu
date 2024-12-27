@@ -53,7 +53,7 @@ impl Texture {
         }
     }
 
-    #[expect(dead_code)]
+    #[allow(dead_code)]
     pub fn create_depth_texture_non_comparison_sampler(
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
