@@ -29,7 +29,7 @@ winit = { version = "0.30.7", features = ["rwh_05"] }
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1.7"
 console_log = "1.0.0"
-reqwest = { version = "0.12.9" }
+reqwest = { version = "0.12.12" }
 wgpu = { version = "23.0.1", features = ["webgl"] }
 wasm-bindgen = "0.2.99"
 wasm-bindgen-futures = "0.4.49"
