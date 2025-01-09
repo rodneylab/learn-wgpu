@@ -313,6 +313,7 @@ struct State<'a> {
     light_buffer: wgpu::Buffer,
     light_bind_group: wgpu::BindGroup,
     light_render_pipeline: wgpu::RenderPipeline,
+    debug_material: model::Material,
     // The window must be declared after the surface so it gets dropped after the surface, as it
     // contains unsafe references to the window's resources.
     window: Arc<Window>,
@@ -414,6 +415,22 @@ impl State<'_> {
                     },
                     wgpu::BindGroupLayoutEntry {
                         binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
+                    },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 2,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            multisampled: false,
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                        },
+                        count: None,
+                    },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 3,
                         visibility: wgpu::ShaderStages::FRAGMENT,
                         ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
                         count: None,
@@ -611,6 +628,35 @@ impl State<'_> {
             a: 1.0,
         };
 
+        let debug_material = {
+            let diffuse_bytes = include_bytes!("../res/cobble-diffuse.png");
+            let normal_bytes = include_bytes!("../res/cobble-normal.png");
+
+            let diffuse_texture = texture::Texture::from_bytes(
+                &device,
+                &queue,
+                diffuse_bytes,
+                "res/alt-diffuse.png",
+                false,
+            )
+            .unwrap();
+            let normal_texture = texture::Texture::from_bytes(
+                &device,
+                &queue,
+                normal_bytes,
+                "res/alt-normal.png",
+                true,
+            )
+            .unwrap();
+            model::Material::new(
+                &device,
+                "alt-material",
+                diffuse_texture,
+                normal_texture,
+                &texture_bind_group_layout,
+            )
+        };
+
         Self {
             surface,
             surface_configured: false,
@@ -636,6 +682,7 @@ impl State<'_> {
             light_buffer,
             light_bind_group,
             light_render_pipeline,
+            debug_material,
             window: window_arc,
             modifiers: ModifiersState::empty(),
         }
@@ -827,8 +874,16 @@ impl State<'_> {
                 &self.light_bind_group,
             );
             render_pass.set_pipeline(&self.render_pipeline);
-            render_pass.draw_model_instanced(
+            // render_pass.draw_model_instanced(
+            //     &self.obj_model,
+            //     0..u32::try_from(self.instances.len())
+            //         .expect("There should be few enough instances to be represented as u32"),
+            //     &self.camera_bind_group,
+            //     &self.light_bind_group,
+            // );
+            render_pass.draw_model_instanced_with_material(
                 &self.obj_model,
+                &self.debug_material,
                 0..u32::try_from(self.instances.len())
                     .expect("There should be few enough instances to be represented as u32"),
                 &self.camera_bind_group,
