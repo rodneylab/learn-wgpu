@@ -58,7 +58,8 @@ pub async fn load_texture(
     texture::Texture::from_bytes(device, queue, &data, file_name, is_normal_map)
 }
 
-#[expect(clippy::too_many_lines)]
+//#[expect(clippy::too_many_lines)]
+#[allow(clippy::too_many_lines)]
 pub async fn load_model(
     file_name: &str,
     device: &wgpu::Device,
@@ -189,7 +190,8 @@ pub async fn load_model(
 
             for (i, n) in triangles_included.into_iter().enumerate() {
                 let denominator;
-                #[expect(clippy::cast_precision_loss)]
+                // #[expect(clippy::cast_precision_loss)]
+                #[allow(clippy::cast_precision_loss)]
                 {
                     denominator = 1.0 / n as f32;
                 }
