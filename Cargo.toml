@@ -5,8 +5,8 @@ authors = ["Rodney Johnson <ask@rodneylab.com>"]
 edition = "2021"
 license = "BSD-3-Clause"
 repository = "https://github.com/rodneylab/learn-wgpu"
-# wgpu v23.0.1 requires Rust 1.76
-rust-version = "1.76"
+# wgpu v24 requires Rust 1.83
+rust-version = "1.83"
 description = "Rust wgpu"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

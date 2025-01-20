@@ -7,7 +7,7 @@ mod texture;
 
 use std::sync::Arc;
 
-use camera::{Camera, CameraController, Projection};
+use camera::{Camera, Controller as CameraController, Projection};
 use cgmath::{Deg, InnerSpace, Rotation3, Zero};
 use model::{Draw as DrawModel, DrawLight, Vertex};
 use pollster::FutureExt;
