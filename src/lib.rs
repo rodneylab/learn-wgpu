@@ -8,7 +8,7 @@ mod texture;
 use std::sync::Arc;
 
 use camera::{Camera, CameraController, Projection};
-use cgmath::{Deg, ElementWise, InnerSpace, Rotation3, Zero};
+use cgmath::{Deg, InnerSpace, Rotation3, Zero};
 use model::{Draw as DrawModel, DrawLight, Vertex};
 use pollster::FutureExt;
 use wgpu::{
@@ -18,7 +18,7 @@ use wgpu::{
 use winit::{
     application::ApplicationHandler,
     dpi::PhysicalSize,
-    event::{DeviceEvent, ElementState, Event, KeyEvent, MouseButton, WindowEvent},
+    event::{DeviceEvent, ElementState, KeyEvent, MouseButton, WindowEvent},
     event_loop::{ActiveEventLoop, EventLoop},
     keyboard::{KeyCode, ModifiersState, PhysicalKey},
     window::{Window, WindowId},
@@ -156,7 +156,6 @@ struct State<'a> {
     size: winit::dpi::PhysicalSize<u32>,
     render_pipeline: wgpu::RenderPipeline,
     obj_model: model::Model,
-    use_initial_render_pipeline: bool,
     clear_colour: wgpu::Color,
     instances: Vec<Instance>,
     instance_buffer: wgpu::Buffer,
@@ -293,11 +292,11 @@ impl State<'_> {
                 label: Some("texture_bind_group_layout"),
             });
 
-        let aspect: f32;
-        #[allow(clippy::cast_precision_loss)]
-        {
-            aspect = config.width as f32 / config.height as f32;
-        }
+        // let aspect: f32;
+        // #[allow(clippy::cast_precision_loss)]
+        // {
+        //     aspect = config.width as f32 / config.height as f32;
+        // }
 
         let camera = Camera::new((0.0, 5.0, 10.0), Deg(-90.0), Deg(-20.0));
         let projection = Projection::new(config.width, config.height, Deg(45.0), 0.1, 100.0);
@@ -516,7 +515,6 @@ impl State<'_> {
             config,
             clear_colour,
             size,
-            use_initial_render_pipeline: true,
             render_pipeline,
             obj_model,
             instances,
@@ -707,7 +705,6 @@ impl State<'_> {
                 timestamp_writes: None,
             });
 
-            // if self.use_initial_render_pipeline {
             render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
             render_pass.set_pipeline(&self.light_render_pipeline);
             render_pass.draw_light_model(

@@ -1,12 +1,9 @@
-use cgmath::{perspective, InnerSpace, Matrix4, Point3, Rad, Rotation3, Vector3, Zero};
+use cgmath::{perspective, InnerSpace, Matrix4, Point3, Rad, Vector3};
 use web_time::Duration;
 use winit::{
-    application::ApplicationHandler,
-    dpi::{PhysicalPosition, PhysicalSize},
-    event::{ElementState, KeyEvent, MouseScrollDelta, WindowEvent},
-    event_loop::{ActiveEventLoop, EventLoop},
-    keyboard::{KeyCode, ModifiersState, PhysicalKey},
-    window::{Window, WindowId},
+    dpi::PhysicalPosition,
+    event::{ElementState, MouseScrollDelta},
+    keyboard::KeyCode,
 };
 
 use std::f32::consts::FRAC_PI_2;
