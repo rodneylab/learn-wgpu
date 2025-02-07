@@ -1,5 +1,5 @@
-/target
 .DS_Store
+/target
 public/learn_wgpu_bg.wasm
 public/learn_wgpu_bg.wasm.ts
 rusty-tags.vi
