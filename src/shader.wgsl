@@ -62,11 +62,6 @@ fn vs_main(
         instance.normal_matrix_2,
     );
 
-    // let world_normal = normalize(normal_matrix * model.normal);
-    // let world_tangent = normalize(normal_matrix * model.tangent);
-    // let world_bitangent = normalize(normal_matrix * model.bitangent);
-    // let tangent_matrix = transpose(mat3x3<f32>(world_tangent, world_bitangent, world_normal));
-
     let world_position = model_matrix * vec4<f32>(model.position, 1.0);
 
     var out: VertexOutput;
