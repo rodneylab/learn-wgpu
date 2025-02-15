@@ -1,3 +1,5 @@
+use std::f32::consts::FRAC_PI_2;
+
 use cgmath::{perspective, InnerSpace, Matrix4, Point3, Rad, Vector3};
 use web_time::Duration;
 use winit::{
@@ -5,8 +7,6 @@ use winit::{
     event::{ElementState, MouseScrollDelta},
     keyboard::KeyCode,
 };
-
-use std::f32::consts::FRAC_PI_2;
 
 const SAFE_FRAC_PI_2: f32 = FRAC_PI_2 - 0.0001;
 

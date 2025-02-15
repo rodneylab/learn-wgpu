@@ -217,10 +217,6 @@ fn create_render_pipeline(
             targets: &[Some(wgpu::ColorTargetState {
                 format: colour_format,
                 blend: None,
-                // blend: Some(wgpu::BlendState {
-                //     alpha: wgpu::BlendComponent::REPLACE,
-                //     color: wgpu::BlendComponent::REPLACE,
-                // }),
                 write_mask: wgpu::ColorWrites::ALL,
             })],
             compilation_options: PipelineCompilationOptions::default(),
@@ -311,12 +307,6 @@ impl State<'_> {
                 ],
                 label: Some("texture_bind_group_layout"),
             });
-
-        // let aspect: f32;
-        // #[allow(clippy::cast_precision_loss)]
-        // {
-        //     aspect = config.width as f32 / config.height as f32;
-        // }
 
         let camera = Camera::new((0.0, 5.0, 10.0), Deg(-90.0), Deg(-20.0));
         let projection = Projection::new(config.width, config.height, Deg(45.0), 0.1, 100.0);
@@ -527,7 +517,6 @@ impl State<'_> {
             create_render_pipeline(
                 &device,
                 &layout,
-                // config.format,
                 hdr.format(),
                 Some(texture::Texture::DEPTH_FORMAT),
                 &[model::ModelVertex::desc()],
@@ -764,13 +753,10 @@ impl State<'_> {
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let output = self.surface.get_current_texture()?;
-        let view = output
-            .texture
-            // .create_view(&wgpu::TextureViewDescriptor::default());
-            .create_view(&wgpu::TextureViewDescriptor {
-                format: Some(self.config.format.add_srgb_suffix()),
-                ..Default::default()
-            });
+        let view = output.texture.create_view(&wgpu::TextureViewDescriptor {
+            format: Some(self.config.format.add_srgb_suffix()),
+            ..Default::default()
+        });
 
         let mut encoder = self
             .device

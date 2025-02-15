@@ -1,0 +1,16 @@
+[package]
+name = "windowless"
+version = "0.1.0"
+authors = ["Ben Hansen <https://github.com/sotrh>"]
+edition = "2021"
+
+[dependencies]
+futures-intrusive = "0.5.0"
+image = "0.25.5"
+pollster = "0.4.0"
+shaderc = "0.8.3"
+wgpu = { version = "24.0.1", features = ["spirv"] }
+
+[[bin]]
+name = "windowless"
+path = "src/main.rs"
