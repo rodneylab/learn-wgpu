@@ -12,6 +12,7 @@ async fn create_adapter(instance: &wgpu::Instance) -> wgpu::Adapter {
         .await
         .unwrap()
 }
+
 async fn create_device(adapter: &wgpu::Adapter) -> (wgpu::Device, wgpu::Queue) {
     adapter
         .request_device(&wgpu::DeviceDescriptor::default(), None)
