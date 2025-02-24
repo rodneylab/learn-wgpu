@@ -300,27 +300,12 @@ checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
 
 [[package]]
 name = "bit-set"
-version = "0.5.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0700ddab506f33b20a03b13996eccd309a48e5ff77d0d95926aa0210fb4e95f1"
-dependencies = [
- "bit-vec 0.6.3",
-]
-
-[[package]]
-name = "bit-set"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08807e080ed7f9d5433fa9b275196cfc35414f66a0c79d864dc51a0d825231a3"
 dependencies = [
- "bit-vec 0.8.0",
+ "bit-vec",
 ]
-
-[[package]]
-name = "bit-vec"
-version = "0.6.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "349f9b6a179ed607305526ca489b34ad0a41aed5f7980fa90eb03160b69598fb"
 
 [[package]]
 name = "bit-vec"
@@ -825,7 +810,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "33d852cb9b869c2a9b3df2f71a3074817f01e1844f839a144f5fcef059a4eb5d"
 dependencies = [
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -951,7 +936,7 @@ dependencies = [
  "glob",
  "image 0.25.5",
  "log",
- "naga 0.9.0",
+ "naga",
  "pollster",
  "rayon",
  "thiserror 1.0.69",
@@ -1172,7 +1157,7 @@ checksum = "dcf29e94d6d243368b7a56caa16bc213e4f9f8ed38c4d9557069527b5d5281ca"
 dependencies = [
  "bitflags 2.8.0",
  "gpu-descriptor-types",
- "hashbrown 0.15.2",
+ "hashbrown",
 ]
 
 [[package]]
@@ -1196,7 +1181,7 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "http",
- "indexmap 2.7.1",
+ "indexmap",
  "slab",
  "tokio",
  "tokio-util",
@@ -1212,12 +1197,6 @@ dependencies = [
  "cfg-if",
  "crunchy",
 ]
-
-[[package]]
-name = "hashbrown"
-version = "0.12.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
 
 [[package]]
 name = "hashbrown"
@@ -1592,22 +1571,12 @@ checksum = "d0263a3d970d5c054ed9312c0057b4f3bde9c0b33836d3637361d4a9e6e7a408"
 
 [[package]]
 name = "indexmap"
-version = "1.9.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd070e393353796e801d209ad339e89596eb4c8d430d18ede6a1cced8fafbd99"
-dependencies = [
- "autocfg",
- "hashbrown 0.12.3",
-]
-
-[[package]]
-name = "indexmap"
 version = "2.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c9c992b02b5b4c94ea26e32fe5bccb7aa7d9f390ab5c1221ff895bc7ea8b652"
 dependencies = [
  "equivalent",
- "hashbrown 0.15.2",
+ "hashbrown",
 ]
 
 [[package]]
@@ -1644,7 +1613,7 @@ checksum = "e19b23d53f35ce9f56aebc7d1bb4e6ac1e9c0db7ac85c8d1760c04379edced37"
 dependencies = [
  "hermit-abi",
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -1793,7 +1762,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc2f4eb4bc735547cfed7c0a4922cbd04a4655978c09b54f1f7b228750664c34"
 dependencies = [
  "cfg-if",
- "windows-targets 0.52.6",
+ "windows-targets 0.48.5",
 ]
 
 [[package]]
@@ -1943,39 +1912,22 @@ dependencies = [
 
 [[package]]
 name = "naga"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f50357e1167a3ab92d6b3c7f4bf5f7fd13fde3f4b28bf0d5ea07b5100fdb6c0"
-dependencies = [
- "bit-set 0.5.3",
- "bitflags 1.3.2",
- "indexmap 1.9.3",
- "log",
- "num-traits",
- "pp-rs",
- "rustc-hash",
- "spirv 0.2.0+1.5.4",
- "termcolor",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "naga"
 version = "24.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e380993072e52eef724eddfcde0ed013b0c023c3f0417336ed041aa9f076994e"
 dependencies = [
  "arrayvec",
- "bit-set 0.8.0",
+ "bit-set",
  "bitflags 2.8.0",
  "cfg_aliases 0.2.1",
  "codespan-reporting",
  "hexf-parse",
- "indexmap 2.7.1",
+ "indexmap",
  "log",
  "petgraph",
+ "pp-rs",
  "rustc-hash",
- "spirv 0.3.0+sdk-1.3.268.0",
+ "spirv",
  "strum",
  "termcolor",
  "thiserror 2.0.11",
@@ -2529,7 +2481,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3672b37090dbd86368a4145bc067582552b29c27377cad4e0a306c97f9bd7772"
 dependencies = [
  "fixedbitset",
- "indexmap 2.7.1",
+ "indexmap",
 ]
 
 [[package]]
@@ -3004,7 +2956,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.59.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -3342,16 +3294,6 @@ checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
 
 [[package]]
 name = "spirv"
-version = "0.2.0+1.5.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "246bfa38fe3db3f1dfc8ca5a2cdeb7348c78be2112740cc0ec8ef18b6d94f830"
-dependencies = [
- "bitflags 1.3.2",
- "num-traits",
-]
-
-[[package]]
-name = "spirv"
 version = "0.3.0+sdk-1.3.268.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eda41003dc44290527a59b13432d4a0379379fa074b70174882adfbdfd917844"
@@ -3487,7 +3429,7 @@ dependencies = [
  "getrandom 0.3.1",
  "once_cell",
  "rustix",
- "windows-sys 0.59.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -3699,7 +3641,7 @@ version = "0.22.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "02a8b472d1a3d7c18e2d61a489aee3453fd9031c33e4f55bd533f4a7adca1bee"
 dependencies = [
- "indexmap 2.7.1",
+ "indexmap",
  "serde",
  "serde_spanned",
  "toml_datetime",
@@ -4202,7 +4144,7 @@ dependencies = [
  "document-features",
  "js-sys",
  "log",
- "naga 24.0.0",
+ "naga",
  "parking_lot 0.12.3",
  "profiling",
  "raw-window-handle 0.6.2",
@@ -4223,14 +4165,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "82a39b8842dc9ffcbe34346e3ab6d496b32a47f6497e119d762c97fcaae3cb37"
 dependencies = [
  "arrayvec",
- "bit-vec 0.8.0",
+ "bit-vec",
  "bitflags 2.8.0",
  "bytemuck",
  "cfg_aliases 0.2.1",
  "document-features",
- "indexmap 2.7.1",
+ "indexmap",
  "log",
- "naga 24.0.0",
+ "naga",
  "once_cell",
  "parking_lot 0.12.3",
  "profiling",
@@ -4251,7 +4193,7 @@ dependencies = [
  "android_system_properties",
  "arrayvec",
  "ash",
- "bit-set 0.8.0",
+ "bit-set",
  "bitflags 2.8.0",
  "block",
  "bytemuck",
@@ -4268,7 +4210,7 @@ dependencies = [
  "libloading",
  "log",
  "metal",
- "naga 24.0.0",
+ "naga",
  "ndk-sys 0.5.0+25.2.9519653",
  "objc",
  "once_cell",
@@ -4335,7 +4277,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
