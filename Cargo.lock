@@ -947,7 +947,7 @@ dependencies = [
  "env_logger 0.10.2",
  "fs_extra",
  "futures-intrusive",
- "gif 0.11.4",
+ "gif",
  "glob",
  "image 0.25.5",
  "log",
@@ -1052,16 +1052,6 @@ dependencies = [
 
 [[package]]
 name = "gif"
-version = "0.11.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3edd93c6756b4dfaf2709eafcc345ba2636565295c198a9cfbf75fa5e3e00b06"
-dependencies = [
- "color_quant",
- "weezl",
-]
-
-[[package]]
-name = "gif"
 version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3fb2d69b19215e18bb912fa30f7ce15846e301408695e44e0ef719f1da9e19f2"
@@ -1080,7 +1070,7 @@ dependencies = [
  "env_logger 0.10.2",
  "framework",
  "futures-intrusive",
- "gif 0.11.4",
+ "gif",
  "image 0.25.5",
  "log",
  "pollster",
@@ -1561,7 +1551,7 @@ dependencies = [
  "byteorder-lite",
  "color_quant",
  "exr",
- "gif 0.13.1",
+ "gif",
  "image-webp",
  "num-traits",
  "png",
